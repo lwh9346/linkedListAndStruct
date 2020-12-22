@@ -348,3 +348,74 @@ Window *handleMouseClickEvent(Window *wptr, int x, int y)
 > 输出：每行一个整数，表示该回合被踢出队列的学生编号。
 
 这个其实是改了一下规则的约瑟夫游戏。我代码里面用了双向链表，方便删除数组元素。由于是循环链表，所以就不加入头节点了（环里面有个空的头节点还挺烦的）。
+
+首先创建一个循环链表（我这里用的是双向链表）。最后一步记得把头尾相接。
+
+```c++
+struct ringNode {
+    ringNode *previous;
+    ringNode *next;
+    int id;
+};
+
+int main() {
+    int n;
+    scanf("%d", &n);
+    ringNode *ringBegin = NULL;
+    ringNode *ringEnd = NULL;
+    for (int i = 0; i < n; i++) {
+        ringNode *rn = new ringNode;
+        rn->next = NULL;
+        rn->id = i + 1;
+        if (ringBegin == NULL) { // 由于没有头节点，需要判断一下头指针是否为空指针
+            ringBegin = rn;
+            ringEnd = rn;
+            continue;
+        }
+        ringEnd->next = rn;
+        rn->previous = ringEnd;
+        ringEnd = rn;
+    }
+    ringEnd->next = ringBegin;
+    ringBegin->previous = ringEnd;
+    ...;
+}
+```
+
+然后是判断是否为满足条件的数字的函数，我有见过有同学用字符串来写的，问题也不是很大。
+
+```c++
+bool requiredNumber(int i) {
+    if (i % 7 == 0) { // 是否能被7整除
+        return true;
+    }
+    while (i > 0) { // 是否含有7，做法就是不断地取出每一位来比较
+        if (i % 10 == 7) {
+            return true;
+        }
+        i /= 10;
+    }
+    return false; // 不满足条件就false了
+}
+```
+
+接下来是报数删除小朋友部分。
+
+```c++
+int num = 1;
+while (true) {
+    if (ringBegin->next == ringBegin) { // 如果首尾相接，说明只剩一个节点了，输出走人
+        printf("%d\n", ringBegin->id);
+        break;
+    }
+    if (requiredNumber(num)) { // 报到了就输出，踢掉
+        printf("%d\n", ringBegin->id);
+        ringBegin->previous->next = ringBegin->next;
+        ringBegin->next->previous = ringBegin->previous;
+    }
+    ringBegin = ringBegin->next; // 依题意，不管有没有报到都要挪到下一个人
+    num++; // 报数
+}
+```
+
+完整代码见`src`文件夹。
